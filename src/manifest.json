@@ -1,16 +1,22 @@
 {
-    "name": "淘宝千牛后台图片视频资源批量下载",
+    "name": "淘宝商品详情页面图片视频资源批量下载",
     "description": "淘宝下载",
     "version": "1.0.0",
     "permissions": [
         "tabs",
         "storage",
-        "webRequest",
+		"webRequest",
+        "declarativeNetRequest",
         "downloads",
-        "scripting"
+        "scripting",
+        "activeTab"
     ],
     "host_permissions": [
-        "https://dreamstep.top/"
+        "https://*.taobao.com/*",
+        "https://*.alicdn.com/*",
+        "https://*.tmall.com/*",
+        "https://*.dreamstep.top/*",
+        "https://127.0.0.1/*"
     ],
     "optional_host_permissions": [
         "*://*/*"
@@ -46,7 +52,7 @@
         "type": "module"
     },
     "action": {
-        "default_title": "Download",
+        "default_title": "淘宝资源下载",
         "default_popup": "page/popup.html",
         "default_icon": {
             "16": "images/download_16.png",
@@ -63,7 +69,7 @@
     },
     "content_scripts": [
         {
-          "matches": ["https://*.taobao.com/*"],
+          "matches": ["https://*.taobao.com/*", "https://*.tmall.com/*", "https://*.alicdn.com/*"],
           "run_at":"document_end",
           "js": ["script/content-script.js"]
         }

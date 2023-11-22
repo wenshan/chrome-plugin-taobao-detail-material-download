@@ -9,19 +9,6 @@
   var selectimgId = '#selectimg';
   var selectvideoId = '#selectvideo';
 
-  // 点击选择所有图片
-  $(selectimgId).click(function(){
-    chrome.runtime.sendMessage({type: 'img'});
-    console.log('发送点击请求ID-img');
-    html = '';
-  });
-  // 点击选择所有视频
-  $(selectvideoId).click(function(){
-    console.log('发送点击请求ID-video');
-    chrome.runtime.sendMessage({type: 'video'});
-    html = '';
-  });
-
   // 获取传单SRC
   function showLinks (request) {
     var tx = '';
@@ -36,7 +23,6 @@
     }
 
     if (data && data.length > 0) {
-
       $(data).each(function(index, item){
         html= html + '<tr class="list" data-src="'+ item.src +'" data-filename="'+ item.filename +'"><td><input type="checkbox" checked="false" id=checkbox_'+ index +'></td><td class="imgbox"><img src='+ item.imgSrc +'></img</td><td class="title">'+ item.title +'</td><td><span class="copylink">copy链接</span></td></tr>';
       });
@@ -54,10 +40,6 @@
     // 收件所有的选择checked的src
     var downloadSrc = [];
     $('#links').find("input:checked").parent().parent().each(function(index, item){
-      // https://img.alicdn.com/imgextra/i2/2210949481850/O1CN01axV4qr1PXLRNFkDQa_!!2210949481850.jpg
-      // https://img.alicdn.com/imgextra/i2/2210949481850/O1CN01axV4qr1PXLRNFkDQa_!!2210949481850.jpg_120x120q90?t=1698072849688
-      // https://img.alicdn.com/imgextra/i3/2210949481850/O1CN017BmUjj1PXLR6sVoKN_!!2210949481850.png
-      // https://img.alicdn.com/imgextra/i3/2210949481850/O…KN_!!2210949481850.png_120x120q90?t=1698073563763
       var obj = {};
       var src = $(item).attr('data-src');
       obj['url'] = src;
@@ -79,9 +61,18 @@
   }
 
   window.onload = function() {
+    console.log('onload');
+    chrome.runtime.sendMessage({type: 'refresh'});
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request && request.taobaoDL && request.taobaoDL.data) {
-        showLinks(request);
+      console.log('popup sender:', sender);
+      if (request && request.taobaoVideo) {
+        console.log('popup-video', request);
+        sendResponse(true);
+      }
+      if (request && request.taobaoDetail) {
+        console.log('popup-img', request);
+        // showLinks(request);
+        sendResponse(true);
       } else {
         alert('无数据');
       }
@@ -89,5 +80,11 @@
 
     $('#download').click(function(){
       downloadCheckedLinks();
-    })
+    });
   }
+
+  // background.js
+chrome.action.onClicked.addListener((tab) => {
+  debugger;
+  console.log('Hello, world!');
+});
