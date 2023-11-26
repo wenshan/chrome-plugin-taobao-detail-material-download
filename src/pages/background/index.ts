@@ -27,6 +27,10 @@ chrome.runtime.onInstalled.addListener(function () {
                 console.log('setM3u8Url response:', data);
                 video['src'] = domain + data.data.local_url;
                 video['type'] = 'video';
+                video['isServer'] = true;
+                video['msg'] = '已完成视频流媒体m3u8格式转换成MP4';
+                video['scformat'] = 'm3u8';
+                video['scdata'] = data.data;
               });
             }
           })
@@ -37,6 +41,10 @@ chrome.runtime.onInstalled.addListener(function () {
         console.log('mp4:', details.url);
         video['src'] = details.url;
         video['type'] = 'video';
+        video['isServer'] = false;
+        video['msg'] = '';
+        video['scformat'] = 'mp4';
+        video['scdata'] = {};
       }
 
       return { cancel: true };

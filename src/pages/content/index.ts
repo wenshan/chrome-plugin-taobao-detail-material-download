@@ -32,6 +32,55 @@ let getMetaInfo = function () {
   return baseArr;
 };
 
+chrome.webRequest.onBeforeRequest.addListener(
+  function (details: { url: any }) {
+    var resourceUrl = details.url;
+    if (resourceUrl.indexOf('.m3u8') > 0) {
+      console.log('m3u8:', details.url);
+      var postUrl =
+        'https://www.dreamstep.top/api/setM3u8Url?url=' + encodeURIComponent(resourceUrl);
+      fetch(postUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS',
+          'Access-Control-Allow-Headers': 'X-Requested-With',
+        },
+        mode: 'cors',
+        cache: 'default',
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            response.json().then((data) => {
+              console.log('setM3u8Url response:', data);
+              video['src'] = domain + data.data.local_url;
+              video['type'] = 'video';
+              video['isServer'] = true;
+              video['msg'] = '已完成视频流媒体m3u8格式转换成MP4';
+              video['scformat'] = 'm3u8';
+              video['scdata'] = data.data;
+            });
+          }
+        })
+        .catch(function (error) {
+          console.log('error:', error);
+        });
+    } else if (resourceUrl.indexOf('.mp4') > 0) {
+      console.log('mp4:', details.url);
+      video['src'] = details.url;
+      video['type'] = 'video';
+      video['isServer'] = false;
+      video['msg'] = '';
+      video['scformat'] = 'mp4';
+      video['scdata'] = {};
+    }
+
+    return { cancel: true };
+  },
+  { urls: ['*://*.taobao.com/*', '*://*.alicdn.com/*'], types: [] }
+);
+
 window.onload = function () {
   path =
     (window.document.title && removeSpecialCharacters(window.document.title)) || '淘宝详情资源下载';
@@ -46,6 +95,9 @@ window.onload = function () {
 
       if (request.video && videos[0]) {
         videos[0]['imgSrc'] = request.video.src;
+        videos[0]['msg'] = request.video.msg;
+        videos[0]['isServer'] = request.video.isServer;
+        videos[0]['scdata'] = request.video.scdata;
       }
       console.log('detailImgs:', detailImgs);
       console.log('maiImgs:', maiImgs);
@@ -54,7 +106,15 @@ window.onload = function () {
       console.log('attributes:', attributes);
 
       chrome.runtime.sendMessage(
-        { taobaoDetail: { detailImgs, maiImgs, videos, classifySkuImgs, attributes } },
+        {
+          taobaoDetail: {
+            detail: detailImgs,
+            mian: maiImgs,
+            video: videos,
+            sku: classifySkuImgs,
+            attr: attributes,
+          },
+        },
         function () {
           console.log('content-script-getImgNode:', '成功！');
         }
@@ -87,6 +147,8 @@ let getDetailImages = function () {
         obj['path'] = path;
         obj['from'] = 'detail';
         obj['format'] = 'JPG';
+        obj['msg'] = '';
+        obj['isServer'] = false;
         detailImgs.push(obj);
       }
     }
@@ -114,10 +176,12 @@ let getMaiImgs = function () {
         obj['imgSrc'] = src && src.indexOf('http') > 0 ? src : 'https:' + src;
         obj['filename'] = title + '.mp4';
         obj['type'] = 'video';
-        obj['size'] = '800x800';
+        obj['size'] = '720';
         obj['path'] = path;
         obj['from'] = 'main';
         obj['format'] = 'MP4';
+        obj['msg'] = '';
+        obj['isServer'] = true;
         videos.push(obj);
       } else {
         let nodeImg = thumbImgs[i].getElementsByTagName('img')[0];
@@ -132,6 +196,8 @@ let getMaiImgs = function () {
         obj['path'] = path;
         obj['from'] = 'main';
         obj['format'] = 'JPG';
+        obj['msg'] = '';
+        obj['isServer'] = false;
         maiImgs.push(obj);
       }
     }
@@ -145,7 +211,7 @@ let getClassifySkuImgs = function () {
   classifySkuImgs = [];
   let nodeTop = document.querySelectorAll('#J_isku')[0];
   let nodeUl = nodeTop.getElementsByClassName('tb-img')[0];
-  let nodeCurrent = nodeUl.getElementsByTagName('a');
+  let nodeCurrent = nodeUl && nodeUl.getElementsByTagName('a');
   if (nodeTop && nodeUl && nodeCurrent.length > 0) {
     for (let i = 0; i < nodeCurrent.length; i++) {
       let obj = {};
@@ -164,6 +230,8 @@ let getClassifySkuImgs = function () {
       obj['path'] = path;
       obj['from'] = 'sku';
       obj['format'] = 'JPG';
+      obj['msg'] = '';
+      obj['isServer'] = false;
       classifySkuImgs.push(obj);
     }
   }
@@ -185,11 +253,13 @@ let getAttributes = function () {
       let tx = nodeCurrent[i].innerText || '';
       strArr.push(tx);
     }
-    obj['des'] = baseInfo.concat(strArr);
+    obj['des'] = baseInfo.concat(strArr).join(' \n ');
     obj['type'] = 'txt';
     obj['path'] = path;
     obj['from'] = 'attributes';
     obj['format'] = 'txt';
+    obj['msg'] = '';
+    obj['isServer'] = false;
     attributes.push(obj);
   }
   return attributes;

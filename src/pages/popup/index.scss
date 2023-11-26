@@ -5,8 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  width: 450px;
-  height: 590px;
+  height: 525px;
+  width: 485px;
 }
 
 ul,
@@ -30,7 +30,7 @@ li {
       padding-left: 20px;
       padding-right: 15px;
       color: #1677ff;
-      height: 41px;
+      height: 43px;
       line-height: 40px;
       margin-top: 0px;
       border-bottom: 1px solid #f0f0f0;
@@ -71,7 +71,6 @@ li {
         padding: 0;
         margin: 0;
         width: 210px;
-        height: 258px;
         background-color: #fff;
         margin: 10px;
         transition: all .3s ease-in-out;

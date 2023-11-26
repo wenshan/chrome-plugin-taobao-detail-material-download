@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Tabs } from 'antd';
+import { Tabs, Alert } from 'antd';
 import {
   YoutubeOutlined,
   WindowsOutlined,
@@ -148,6 +148,7 @@ class PupupPage extends React.Component<PropType, StateType> {
             </span>
           ),
           key: 'mian',
+          data: [],
         },
         {
           label: (
@@ -157,6 +158,7 @@ class PupupPage extends React.Component<PropType, StateType> {
             </span>
           ),
           key: 'detail',
+          data: [],
         },
         {
           label: (
@@ -166,6 +168,7 @@ class PupupPage extends React.Component<PropType, StateType> {
             </span>
           ),
           key: 'sku',
+          data: [],
         },
         {
           label: (
@@ -175,6 +178,7 @@ class PupupPage extends React.Component<PropType, StateType> {
             </span>
           ),
           key: 'video',
+          data: [],
         },
         {
           label: (
@@ -183,7 +187,8 @@ class PupupPage extends React.Component<PropType, StateType> {
               文本
             </span>
           ),
-          key: 'text',
+          key: 'attr',
+          data: [],
         },
       ],
     };
@@ -198,15 +203,29 @@ class PupupPage extends React.Component<PropType, StateType> {
   // 获取tab item
   componentDidMount() {
     console.log('onload');
+    const { tabsItems } = this.state;
     if (chrome && chrome.runtime) {
       chrome.runtime.sendMessage({ type: 'refresh' });
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('popup sender:', sender);
         if (request && request.taobaoDetail) {
-          debugger;
           console.log('popup-taobaoDetail', request);
+          // 判断是否存在SKU
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const sequence: ({ key: string } & { data: any })[] = [];
+          // eslint-disable-next-line array-callback-return
+          tabsItems.map((item: { key: string }) => {
+            if (item && item.key) {
+              const key = item.key;
+              if (request.taobaoDetail[key] && request.taobaoDetail[key].length > 0) {
+                sequence.push(Object.assign({}, item, { data: request.taobaoDetail[key] || [] }));
+              }
+            }
+          });
+          console.log('sequence:', sequence);
+
           this.setState({
-            taobaoDetail: request.taobaoDetail,
+            tabsItems: sequence,
           });
           // showLinks(request);
           sendResponse(true);
@@ -231,32 +250,83 @@ class PupupPage extends React.Component<PropType, StateType> {
 
   // popup-body render html
   popupBodyHtml = () => {
-    const { activeKey, taobaoDetail } = this.state;
     let html;
+    const { activeKey, tabsItems } = this.state;
+    const tabsItemsNew = {};
+
+    tabsItems.map((item: { key: string }) => {
+      // @ts-ignore
+      tabsItemsNew[item.key] = item;
+    });
+    // @ts-ignore
+    const tabData = tabsItemsNew[activeKey];
+    console.log('tabData:', tabData);
     switch (activeKey) {
       case 'mian':
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <ImgItemList data={taobaoDetail.maiImgs}></ImgItemList>;
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <ImgItemList data={tabData.data}></ImgItemList>
+          </>
+        );
         break;
       case 'detail':
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <ImgItemList data={taobaoDetail.detailImgs}></ImgItemList>;
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <ImgItemList data={tabData.data}></ImgItemList>
+          </>
+        );
         break;
       case 'sku':
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <ImgItemList data={taobaoDetail.classifySkuImgs}></ImgItemList>;
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <ImgItemList data={tabData.data}></ImgItemList>
+          </>
+        );
         break;
       case 'video':
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <VideoItemList data={taobaoDetail.videos}></VideoItemList>;
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <VideoItemList data={tabData.data}></VideoItemList>
+          </>
+        );
         break;
-      case 'text':
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <TxItemList data={taobaoDetail.attributes}></TxItemList>;
+      case 'attr':
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <TxItemList data={tabData.data}></TxItemList>
+          </>
+        );
         break;
       default:
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        html = <ImgItemList data={taobaoDetail.maiImgs}></ImgItemList>;
+        // @ts-ignore
+        html = (
+          <>
+            {tabData.data[0] && tabData.data[0].msg && (
+              <Alert message={tabData.data[0].msg} type="success" showIcon />
+            )}
+            <ImgItemList data={tabData.data}></ImgItemList>
+          </>
+        );
         break;
     }
     return html;
