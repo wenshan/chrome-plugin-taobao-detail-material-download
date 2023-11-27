@@ -32,55 +32,6 @@ let getMetaInfo = function () {
   return baseArr;
 };
 
-chrome.webRequest.onBeforeRequest.addListener(
-  function (details: { url: any }) {
-    var resourceUrl = details.url;
-    if (resourceUrl.indexOf('.m3u8') > 0) {
-      console.log('m3u8:', details.url);
-      var postUrl =
-        'https://www.dreamstep.top/api/setM3u8Url?url=' + encodeURIComponent(resourceUrl);
-      fetch(postUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS',
-          'Access-Control-Allow-Headers': 'X-Requested-With',
-        },
-        mode: 'cors',
-        cache: 'default',
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            response.json().then((data) => {
-              console.log('setM3u8Url response:', data);
-              video['src'] = domain + data.data.local_url;
-              video['type'] = 'video';
-              video['isServer'] = true;
-              video['msg'] = '已完成视频流媒体m3u8格式转换成MP4';
-              video['scformat'] = 'm3u8';
-              video['scdata'] = data.data;
-            });
-          }
-        })
-        .catch(function (error) {
-          console.log('error:', error);
-        });
-    } else if (resourceUrl.indexOf('.mp4') > 0) {
-      console.log('mp4:', details.url);
-      video['src'] = details.url;
-      video['type'] = 'video';
-      video['isServer'] = false;
-      video['msg'] = '';
-      video['scformat'] = 'mp4';
-      video['scdata'] = {};
-    }
-
-    return { cancel: true };
-  },
-  { urls: ['*://*.taobao.com/*', '*://*.alicdn.com/*'], types: [] }
-);
-
 window.onload = function () {
   path =
     (window.document.title && removeSpecialCharacters(window.document.title)) || '淘宝详情资源下载';
