@@ -1,29 +1,27 @@
-import { Image, Checkbox } from 'antd';
+import { Image } from 'antd';
 import { DownloadOutlined, ExportOutlined } from '@ant-design/icons';
 
-function VideoItemList(props: { data: any }) {
+function VideoItemList(props: { data: any; itemDownloadEvent: any; openTargeWindow: any }) {
   console.log('VideoItemList-props:', props);
-  const { data } = props;
+  const { data, itemDownloadEvent, openTargeWindow } = props;
   return (
     <div className="item">
       <ul>
         {data &&
+          data.length > 0 &&
           data.map((item: any) => (
-            <li>
+            <li key={item.title}>
               <div className="box">
                 <Image
                   width={200}
                   src={item.src}
                   preview={{
                     imageRender: () => (
-                      <video muted width="100%" controls src={item.imgSrc || item.src} />
+                      <video muted width="480px" controls src={item.imgSrc || item.src} />
                     ),
                     toolbarRender: () => null,
                   }}
                 ></Image>
-                <span className="checkbox">
-                  <Checkbox></Checkbox>
-                </span>
               </div>
               <div className="title">{item.title}</div>
               <div className="footer">
@@ -31,10 +29,20 @@ function VideoItemList(props: { data: any }) {
                 <span className="right">
                   <span className="imgformat">{item.format}</span>
                   <span className="imgexport">
-                    <ExportOutlined style={{ color: '#66666', fontSize: '14px' }} />
+                    <ExportOutlined
+                      style={{ color: '#66666', fontSize: '14px' }}
+                      onClick={() => {
+                        openTargeWindow(item);
+                      }}
+                    />
                   </span>
                   <span className="imgdownload">
-                    <DownloadOutlined style={{ color: '#666666', fontSize: '18px' }} />
+                    <DownloadOutlined
+                      style={{ color: '#666666', fontSize: '18px' }}
+                      onClick={() => {
+                        itemDownloadEvent(item);
+                      }}
+                    />
                   </span>
                 </span>
               </div>

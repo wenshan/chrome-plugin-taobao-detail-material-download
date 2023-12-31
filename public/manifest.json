@@ -12,11 +12,27 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://*.taobao.com/*",
-    "https://*.alicdn.com/*",
-    "https://*.tmall.com/*",
-    "https://*.dreamstep.top/*",
-    "https://127.0.0.1/*"
+    "*://*.alicdn.com/*",
+    "*://*.taobao.com/*",
+    "*://*.tmall.com/*",
+    "*://*.dreamstep.top/*",
+    "*://*.aliexpress.com/*",
+    "*://*.aliexpress.us/*",
+    "*://*.aliexpress.ru/*",
+    "*://*.aliexpress-media.com/*",
+    "*://*.amazon.com/*",
+    "*://*.amazon.cn/*",
+    "*://*.amazon.mx/*",
+    "*://*.amazon.ca/*",
+    "*://*.amazon.uk/*",
+    "*://*.amazon.de/*",
+    "*://*.amazon.fr/*",
+    "*://*.amazon.it/*",
+    "*://*.amazon.es/*",
+    "*://*.amazon.jp/*",
+    "*://*.amazon.au/*",
+    "*://*.amazon.sg/*",
+    "*://*.media-amazon.com/*"
   ],
   "optional_host_permissions": [
     "*://*/*"
@@ -70,13 +86,36 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.taobao.com/*",
-        "https://*.tmall.com/*",
-        "https://*.alicdn.com/*"
+        "https://*.taobao.com/*"
       ],
       "run_at": "document_end",
       "js": [
-        "content.js"
+        "contentTaobao.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://*.tmall.com/*","https://*.tmall.hk/*"
+      ],
+      "run_at": "document_end",
+      "js": [
+        "contentTmall.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://*.amazon.com/*","https://*.amazon.cn/*","https://*.amazon.ca/*","https://*.amazon.mx/*","https://*.amazon.uk/*","https://*.amazon.de/*","https://*.amazon.fr/*","https://*.amazon.it/*","https://*.amazon.es/*","https://*.amazon.jp/*","https://*.amazon.au/*", "https://*.amazon.sg/*"
+      ],
+      "run_at": "document_end",
+      "js": [
+        "contentAmazon.js"
+      ]
+    },
+    {
+      "matches": [ "*://*.aliexpress.us/*", "*://*.aliexpress.com/*", "*://*.aliexpress.ru/*" ],
+      "run_at": "document_end",
+      "js": [
+        "contentAliexpress.js"
       ]
     }
   ],

@@ -84,11 +84,12 @@ checkBrowsers(paths.appPath, isInteractive)
     /** 改动：手动 HRM，在 crx 中必须带上 hostname、port 否则无法热更新，坑了很久。。。 */
     const pages = Object.entries(require('../config/pageConf'));
     const watchRunDir = [];
+    console.log('config:', config);
     pages.forEach((cur) => {
       const [name, { template }] = cur;
       const url = config.entry[name];
-      if(url) {
-        if(template) {
+      if (url) {
+        if (template) {
           // https://webpack.js.org/guides/hot-module-replacement/#via-the-nodejs-api
           config.entry[name] = [
             'webpack/hot/dev-server.js',
@@ -190,14 +191,14 @@ checkBrowsers(paths.appPath, isInteractive)
         if (comp.modifiedFiles) {
           const changedFiles = Array.from(comp.modifiedFiles, (file) => `\n  ${file}`).join('');
           console.log('FILES CHANGED:', changedFiles);
-          if(watchRunDir.some(p => changedFiles.includes(p))) {
+          if (watchRunDir.some(p => changedFiles.includes(p))) {
             contentOrBackgroundIsChange = true;
           }
         }
       });
 
       compiler.hooks.done.tap('contentOrBackgroundChangedDone', () => {
-        if(contentOrBackgroundIsChange) {
+        if (contentOrBackgroundIsChange) {
           contentOrBackgroundIsChange = false;
           console.log('--------- 发起 chrome reload 更新 ---------');
           sseStream?.writeMessage(

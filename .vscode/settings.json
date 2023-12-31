@@ -1,12 +1,22 @@
 {
+  "prettier.jsxSingleQuote": true,
+  "prettier.useTabs": false,
+  "prettier.jsonEnable": [],  
+  "prettier.openOutput": false,
   "cSpell.words": [
     "'mia",
+    "Aliexpress",
     "antd",
+    "aplus",
+    "exparams",
     "Imgs",
     "lazyload",
     "mian",
     "Pupup",
     "scdata",
-    "scformat"
+    "scformat",
+    "tmall",
+    "uniquify",
+    "userid"
   ]
 }
