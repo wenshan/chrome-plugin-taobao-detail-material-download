@@ -81,7 +81,13 @@ let getFilename = function (url: string) {
       // @ts-ignore
       (urlPath.match(/[^/\\&?]+\.\w+$/) && urlPath.match(/[^/\\&?]+\.\w+$/)[0]) || '';
     var arr = filenameOne.split('.');
-    var name = arr[0];
+    var name = '';
+    console.log(arr[0]);
+    if (arr[0].indexOf('!') > -1) {
+      name = arr[0].split('!')[0];
+    } else {
+      name = arr[0];
+    }
     var format = arr[1] && arr[1].indexOf('_') > 0 ? arr[1].split('_')[0] : arr[1];
     if (name && format) {
       filename = name + '.' + format;

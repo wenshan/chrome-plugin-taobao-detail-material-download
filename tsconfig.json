@@ -14,6 +14,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "noImplicitThis": true,
     "strict": true,
+    "no-useless-escape": 0,
+    " array-callback-return": 0,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",

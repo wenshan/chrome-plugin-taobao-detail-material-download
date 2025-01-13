@@ -14,10 +14,10 @@ function VideoItemList(props: { data: any; itemDownloadEvent: any; openTargeWind
               <div className="box">
                 <Image
                   width={200}
-                  src={item.src}
+                  src={item.imgSrc}
                   preview={{
                     imageRender: () => (
-                      <video muted width="480px" controls src={item.imgSrc || item.src} />
+                      <video muted width="480px" controls src={item.src || item.src} />
                     ),
                     toolbarRender: () => null,
                   }}

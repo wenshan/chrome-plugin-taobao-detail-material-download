@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Tabs, Alert, Radio, Button } from 'antd';
+import { Tabs, Alert, Radio, Button, message } from 'antd';
+import axios from 'axios';
+
 import {
   YoutubeOutlined,
   WindowsOutlined,
@@ -10,6 +12,7 @@ import {
   ExclamationCircleOutlined,
   SettingOutlined,
   DownloadOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import ImgItemList from './component/imgItemList';
 import VideoItemList from './component/videoItemList';
@@ -28,6 +31,8 @@ type StateType = {
   total: number;
   currentAmount: number;
   loading: boolean;
+  itemId: string;
+  onePrice: string;
 };
 class PupupPage extends React.Component<PropType, StateType> {
   constructor(props: PropType | Readonly<PropType>) {
@@ -36,8 +41,19 @@ class PupupPage extends React.Component<PropType, StateType> {
       fileNamePath: '',
       total: 0,
       currentAmount: 0,
-      activeKey: 'mian',
+      activeKey: 'image_link',
       tabsItems: [
+        {
+          label: (
+            <span>
+              <WindowsOutlined />
+              白底图
+            </span>
+          ),
+          key: 'image_link',
+          currentAmount: 0,
+          data: [],
+        },
         {
           label: (
             <span>
@@ -45,7 +61,7 @@ class PupupPage extends React.Component<PropType, StateType> {
               主图
             </span>
           ),
-          key: 'mian',
+          key: 'additional_image_link',
           currentAmount: 0,
           data: [],
         },
@@ -56,7 +72,7 @@ class PupupPage extends React.Component<PropType, StateType> {
               详情
             </span>
           ),
-          key: 'detail',
+          key: 'lifestyle_image_link',
           currentAmount: 0,
           data: [],
         },
@@ -94,6 +110,8 @@ class PupupPage extends React.Component<PropType, StateType> {
           data: [],
         },
       ],
+      itemId: '',
+      onePrice: '',
       loadType: 1,
       loading: false,
     };
@@ -227,64 +245,166 @@ class PupupPage extends React.Component<PropType, StateType> {
   openTargeWindow = (item: { imgSrc: string }) => {
     window.open(item.imgSrc, '_blank');
   };
+  pushDownloadEvent = () => {
+    const { tabsItems, fileNamePath, itemId, onePrice } = this.state;
+    var postData = {
+      access_token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhvdV92ZUBob3RtYWlsLmNvbSIsImlhdCI6MTczNjM0NDU2MX0.cDoQX2m8NrN0Uhi1AdwukfGhFoyquiTcePZVw1AiXMQ',
+      type: 'download-data',
+      data: tabsItems,
+      title: fileNamePath,
+      itemId,
+      onePrice,
+    };
+    console.log('messageData:', postData);
+    var resourceUrl = 'http://127.0.0.1:7001/api/product/createProductDownload';
+    axios
+      .post(resourceUrl, postData, {
+        withCredentials: true,
+        timeout: 50000,
+      })
+      .then((res) => {
+        console.log('res:', res);
+        if (res && res.status === 200) {
+          message.success({ content: '发送成功' });
+        } else {
+          message.error({ content: '数据推送失败' });
+        }
+      });
+  };
+  pushDataEvent = () => {
+    const { tabsItems, fileNamePath, itemId, onePrice } = this.state;
+    var postData = {
+      access_token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhvdV92ZUBob3RtYWlsLmNvbSIsImlhdCI6MTczNjM0NDU2MX0.cDoQX2m8NrN0Uhi1AdwukfGhFoyquiTcePZVw1AiXMQ',
+      type: 'push-data',
+      data: tabsItems,
+      title: fileNamePath,
+      itemId,
+      onePrice,
+    };
+    console.log('messageData:', postData);
+    var resourceUrl = 'http://127.0.0.1:7001/api/product/createProductPushData';
+    axios
+      .post(resourceUrl, postData, {
+        withCredentials: true,
+        timeout: 50000,
+      })
+      .then((res) => {
+        console.log('res:', res);
+        if (res && res.status === 200) {
+          message.success({ content: '发送成功' });
+        } else {
+          message.error({ content: '数据推送失败' });
+        }
+      });
+  };
+  // 刷新数据
+  refreshContent = () => {
+    const _self = this;
+    const { tabsItems, activeKey } = this.state;
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs: any) {
+      tabs &&
+        tabs.length > 0 &&
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'popup-refresh' }, function (response) {
+          console.log('refreshContent:', tabs[0].id);
+          console.log('refreshContent response:', response);
+          if (
+            response &&
+            response.type === 'content-data' &&
+            response.data &&
+            response.fileNamePath
+          ) {
+            const result = response.data;
+            // 初始化数据
+            const updateTabsItems: ({ key: string | number; currentAmount: number } & {
+              data: any;
+            })[] = [];
+            // eslint-disable-next-line array-callback-return
+            tabsItems.map((item: { key: string | number }) => {
+              if (item.key && result && result[item.key]) {
+                let currentAmount = result[item.key] && result[item.key].length;
+                updateTabsItems.push(
+                  Object.assign({}, item, { data: result[item.key], currentAmount })
+                );
+              }
+            });
+            let total = 0;
+            let tabsObj = {};
+            // eslint-disable-next-line array-callback-return
+            updateTabsItems.map((item) => {
+              total = total + item.currentAmount;
+              console.log('total:', total);
+              // @ts-ignore
+              tabsObj[item.key] = item;
+            });
+            _self.setState({
+              tabsItems: updateTabsItems,
+              fileNamePath: response.fileNamePath,
+              itemId: response.itemId,
+              onePrice: response.onePrice,
+              total,
+              // @ts-ignore
+              currentAmount: tabsObj[activeKey].currentAmount,
+            });
+          }
+        });
+    });
+  };
 
   // 获取tab item
   async componentDidMount() {
-    console.log('onload');
+    console.log('componentDidMount onload');
     const { tabsItems, activeKey } = this.state;
-    if (chrome && chrome.runtime) {
-      chrome.runtime.sendMessage({ type: 'popup-refresh' }, (res) => {
-        console.log('popup-refresh-res-1:', res);
-      });
-      console.log('onload-refresh', 'componentDidMount');
-      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        console.log('popup sender:', sender);
-        if (request.type === 'content-data') {
-          console.log('popup-content-data-taobaoDetail', request);
-          sendResponse(request);
-          // 判断是否存在SKU
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const sequence: ({ key: string; currentAmount: number } & { data: any })[] = [];
-          // eslint-disable-next-line array-callback-return
-          tabsItems.map((item: { key: string }) => {
-            if (item && item.key) {
-              const key = item.key;
-              if (request.taobaoDetail[key] && request.taobaoDetail[key].length > 0) {
-                sequence.push(
-                  Object.assign({}, item, {
-                    data: request.taobaoDetail[key] || [],
-                    currentAmount:
-                      (request.taobaoDetail[key] && request.taobaoDetail[key].length) || 0,
-                  })
-                );
-              }
+    if (chrome && chrome.tabs) {
+      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+        console.log('tabs:', tabs);
+        if (tabs && tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'popup-refresh' }, (response) => {
+            console.log('popup-refresh-res-1:', response);
+            if (
+              response &&
+              response.type === 'content-data' &&
+              response.data &&
+              response.fileNamePath
+            ) {
+              const result = response.data;
+              // 初始化数据
+              const updateTabsItems: ({ key: string | number; currentAmount: number } & {
+                data: any;
+              })[] = [];
+              // eslint-disable-next-line array-callback-return
+              tabsItems.map((item: { key: string | number }) => {
+                if (item.key && result && result[item.key]) {
+                  let currentAmount = result[item.key] && result[item.key].length;
+                  updateTabsItems.push(
+                    Object.assign({}, item, { data: result[item.key], currentAmount })
+                  );
+                }
+              });
+              let total = 0;
+              let tabsObj = {};
+              // eslint-disable-next-line array-callback-return
+              updateTabsItems.map((item) => {
+                total = total + item.currentAmount;
+                console.log('total:', total);
+                // @ts-ignore
+                tabsObj[item.key] = item;
+              });
+              this.setState({
+                tabsItems: updateTabsItems,
+                fileNamePath: response.fileNamePath,
+                itemId: response.itemId,
+                onePrice: response.onePrice,
+                total,
+                // @ts-ignore
+                currentAmount: tabsObj[activeKey].currentAmount,
+              });
             }
           });
-          let total = 0;
-          let tabsObj = {};
-          // eslint-disable-next-line array-callback-return
-          sequence.map((item) => {
-            total = total + item.currentAmount;
-            console.log('total:', total);
-            // @ts-ignore
-            tabsObj[item.key] = item;
-          });
-
-          this.setState({
-            tabsItems: sequence,
-            fileNamePath: request.fileNamePath,
-            total,
-            // @ts-ignore
-            currentAmount: tabsObj[activeKey].currentAmount,
-          });
-        }
-        if (request.type === 'download') {
-          sendResponse(request);
-          this.setState({
-            loading: request.loading || false,
-          });
         }
       });
+      console.log('onload-refresh', 'componentDidMount');
     }
   }
 
@@ -397,9 +517,12 @@ class PupupPage extends React.Component<PropType, StateType> {
       <>
         <div className="popup-wrap">
           <div className="popup-header">
-            <span className="title">
+            <div className="title">
               <FileSearchOutlined style={{ color: '#1677ff', fontSize: '17px' }} /> 当前页面资源
-            </span>
+            </div>
+            <div className="file-name">{this.state.fileNamePath}</div>
+          </div>
+          <div className="popup-tabs">
             <Tabs
               onChange={this.tabsChange}
               defaultActiveKey={this.state.activeKey}
@@ -417,6 +540,9 @@ class PupupPage extends React.Component<PropType, StateType> {
               </span>
               <span className="num">
                 {this.state.currentAmount}/{this.state.total}
+              </span>
+              <span className="refresh">
+                <SyncOutlined onClick={this.refreshContent} />
               </span>
               <span>
                 <Button
@@ -439,6 +565,12 @@ class PupupPage extends React.Component<PropType, StateType> {
             <span>
               <SettingOutlined style={{ color: '#333', fontSize: '20px' }} />
             </span>
+            <Button size="small" type="primary" onClick={this.pushDataEvent}>
+              Pull Data
+            </Button>
+            <Button size="small" type="primary" onClick={this.pushDownloadEvent}>
+              下载素材
+            </Button>
           </div>
         </div>
       </>

@@ -6,7 +6,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 525px;
-  width: 482px;
+  width: 552px;
 }
 
 ul,
@@ -16,7 +16,7 @@ li {
 
 .popup-wrap {
   height: 550px;
-  width: 480px;
+  width: 550px;
   border: 1px solid #f8f8f8;
 
   .popup-header {
@@ -31,14 +31,33 @@ li {
       padding-left: 20px;
       padding-right: 15px;
       color: #1677ff;
-      height: 43px;
-      line-height: 40px;
+      height: 38px;
+      line-height: 38px;
       margin-top: 0px;
-      border-bottom: 1px solid #f0f0f0;
+      overflow: hidden;
     }
-
-    .ant-tabs {
+    .file-name {
       display: inline-block;
+      font-size: 14px;
+      width: 380px;
+      line-height: 38px;
+      height: 38px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      -ms-text-overflow: ellipsis;
+      -o-text-overflow: ellipsis;
+      text-align: left;
+      
+    }
+  }
+  .popup-tabs {
+    padding-left: 0px;
+    .ant-tabs-nav {
+      margin-bottom: 5px;
+    }
+    .ant-tabs {
+      display: block;
 
       .ant-tabs-tab {
         margin: 0 0 0 15px;
@@ -49,7 +68,6 @@ li {
       }
     }
   }
-
   .popup-tool {
     font-size: 14px;
     height: 30px;
@@ -72,12 +90,17 @@ li {
         color: #1677ff;
         width: 40px;
       }
+      .refresh {
+        display: inline-block;
+        padding-left: 10px;
+        padding-right: 20px;
+      }
     }
   }
 
   .popup-body {
     background-color: #ffffff;
-    height: 470px;
+    height: 400px;
     overflow-x: hidden;
     overflow-y: auto;
 
@@ -133,7 +156,6 @@ li {
           text-align: center;
           overflow: hidden;
           white-space: nowrap;
-          text-overflow: ellipsis;
           text-overflow: ellipsis;
           -ms-text-overflow: ellipsis;
           -o-text-overflow: ellipsis;
