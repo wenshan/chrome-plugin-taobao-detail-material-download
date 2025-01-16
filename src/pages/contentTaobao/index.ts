@@ -250,7 +250,7 @@ let getClassifySkuImgs = function () {
   sku = [];
   let skuColorObj = {};
   // 颜色
-  let colorNodeUl = document.querySelectorAll('#struct-saleProp li.has-upload-img');
+  let colorNodeUl = document.querySelectorAll('.sell-color-item-container li.has-upload-img');
   if (colorNodeUl && colorNodeUl.length > 0) {
     for (let i = 0; i < colorNodeUl.length; i++) {
       let image = colorNodeUl[i].getElementsByTagName('img')[0];
@@ -263,9 +263,16 @@ let getClassifySkuImgs = function () {
       let type = 'img';
       let from = 'sku';
       let format = 'JPG';
+      let remark = colorNodeUl[i].getElementsByTagName('input')[1].getAttribute('value');
       if (title) {
+        let tempTitle;
+        if (remark) {
+          tempTitle = title.replace(/\s+/g, '&') + '(' + remark + ')';
+        } else {
+          tempTitle = title.replace(/\s+/g, '&');
+        }
         // @ts-ignore
-        skuColorObj[title] = Object.assign(
+        skuColorObj[tempTitle] = Object.assign(
           {},
           { filename, src, imgSrc, title, size, type, from, format, itemId }
         );
@@ -281,12 +288,17 @@ let getClassifySkuImgs = function () {
         let title2 = titleNode.getElementsByTagName('span')[0].innerText;
         let price =
           (priceNode && priceNode.getElementsByTagName('input')[0].getAttribute('value')) || 0;
+        let tempTitle = title2.replace(/\s+/g, '&');
         // @ts-ignore
-        let obj = Object.assign({}, skuColorObj[title2], { title: title2, price });
-        // @ts-ignore
-        sku.push(obj);
+        if (title2 && skuColorObj[tempTitle]) {
+          // @ts-ignore
+          let obj = Object.assign({}, skuColorObj[tempTitle], { title: title2, price });
+          // @ts-ignore
+          sku.push(obj);
+        }
       }
     }
+    console.log('sku:', sku);
     return sku;
   }
 };

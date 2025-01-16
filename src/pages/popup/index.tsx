@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Tabs, Alert, Radio, Button, message } from 'antd';
+import { Tabs, Alert, Radio, Button, message, Spin, Modal, Input } from 'antd';
 import axios from 'axios';
-
 import {
   YoutubeOutlined,
   WindowsOutlined,
@@ -17,7 +16,10 @@ import {
 import ImgItemList from './component/imgItemList';
 import VideoItemList from './component/videoItemList';
 import TxItemList from './component/txItemList';
+
 import './index.scss';
+
+const { TextArea } = Input;
 
 type PropType = {
   taobaoDetail: any;
@@ -33,27 +35,22 @@ type StateType = {
   loading: boolean;
   itemId: string;
   onePrice: string;
+  spinning: boolean;
+  isModalOpen: boolean;
+  access_token: string;
 };
 class PupupPage extends React.Component<PropType, StateType> {
   constructor(props: PropType | Readonly<PropType>) {
     super(props);
     this.state = {
+      access_token: '',
+      isModalOpen: false,
+      spinning: false,
       fileNamePath: '',
       total: 0,
       currentAmount: 0,
-      activeKey: 'image_link',
+      activeKey: 'additional_image_link',
       tabsItems: [
-        {
-          label: (
-            <span>
-              <WindowsOutlined />
-              白底图
-            </span>
-          ),
-          key: 'image_link',
-          currentAmount: 0,
-          data: [],
-        },
         {
           label: (
             <span>
@@ -62,6 +59,17 @@ class PupupPage extends React.Component<PropType, StateType> {
             </span>
           ),
           key: 'additional_image_link',
+          currentAmount: 0,
+          data: [],
+        },
+        {
+          label: (
+            <span>
+              <WindowsOutlined />
+              白底图
+            </span>
+          ),
+          key: 'image_link',
           currentAmount: 0,
           data: [],
         },
@@ -245,64 +253,69 @@ class PupupPage extends React.Component<PropType, StateType> {
   openTargeWindow = (item: { imgSrc: string }) => {
     window.open(item.imgSrc, '_blank');
   };
-  pushDownloadEvent = () => {
-    const { tabsItems, fileNamePath, itemId, onePrice } = this.state;
-    var postData = {
-      access_token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhvdV92ZUBob3RtYWlsLmNvbSIsImlhdCI6MTczNjM0NDU2MX0.cDoQX2m8NrN0Uhi1AdwukfGhFoyquiTcePZVw1AiXMQ',
-      type: 'download-data',
-      data: tabsItems,
-      title: fileNamePath,
-      itemId,
-      onePrice,
-    };
-    console.log('messageData:', postData);
-    var resourceUrl = 'http://127.0.0.1:7001/api/product/createProductDownload';
-    axios
-      .post(resourceUrl, postData, {
-        withCredentials: true,
-        timeout: 50000,
-      })
-      .then((res) => {
-        console.log('res:', res);
-        if (res && res.status === 200) {
-          message.success({ content: '发送成功' });
-        } else {
-          message.error({ content: '数据推送失败' });
-        }
-      });
+  pushDownloadCookies = () => {
+    this.setState({
+      isModalOpen: true,
+    });
   };
   pushDataEvent = () => {
-    const { tabsItems, fileNamePath, itemId, onePrice } = this.state;
-    var postData = {
-      access_token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhvdV92ZUBob3RtYWlsLmNvbSIsImlhdCI6MTczNjM0NDU2MX0.cDoQX2m8NrN0Uhi1AdwukfGhFoyquiTcePZVw1AiXMQ',
-      type: 'push-data',
-      data: tabsItems,
-      title: fileNamePath,
-      itemId,
-      onePrice,
-    };
-    console.log('messageData:', postData);
-    var resourceUrl = 'http://127.0.0.1:7001/api/product/createProductPushData';
-    axios
-      .post(resourceUrl, postData, {
-        withCredentials: true,
-        timeout: 50000,
-      })
-      .then((res) => {
-        console.log('res:', res);
-        if (res && res.status === 200) {
-          message.success({ content: '发送成功' });
-        } else {
-          message.error({ content: '数据推送失败' });
-        }
+    const { tabsItems, fileNamePath, itemId, onePrice, access_token } = this.state;
+    if (access_token && tabsItems && fileNamePath) {
+      const postData = {
+        access_token,
+        type: 'push-data',
+        data: tabsItems,
+        title: fileNamePath,
+        itemId,
+        onePrice,
+      };
+      console.log('messageData:', postData);
+      // const resourceUrl = 'http://127.0.0.1:7001/api/product/createProductPushData';
+      const resourceUrl = 'https://api.limeetpet.com/api/product/createProductPushData';
+      this.setState({
+        spinning: true,
       });
+      axios
+        .post(resourceUrl, postData, {
+          withCredentials: true,
+          timeout: 50000,
+        })
+        .then((res) => {
+          console.log('res:', res);
+          if (res && res.status === 200) {
+            this.setState({
+              spinning: false,
+            });
+            message.success({ content: '发送成功' });
+          } else {
+            this.setState({
+              spinning: false,
+            });
+            message.error({ content: '数据推送失败' });
+          }
+        })
+        .catch((error) => {
+          this.setState({
+            spinning: false,
+          });
+          message.error({ content: error });
+        });
+    } else {
+      this.setState({
+        spinning: false,
+      });
+      message.error({ content: '缺少参数' });
+    }
   };
   // 刷新数据
   refreshContent = () => {
     const _self = this;
     const { tabsItems, activeKey } = this.state;
+    chrome.storage.local.get(['access_token'], (result) => {
+      this.setState({
+        access_token: result.access_token,
+      });
+    });
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs: any) {
       tabs &&
         tabs.length > 0 &&
@@ -356,6 +369,11 @@ class PupupPage extends React.Component<PropType, StateType> {
   async componentDidMount() {
     console.log('componentDidMount onload');
     const { tabsItems, activeKey } = this.state;
+    chrome.storage.local.get(['access_token'], (result) => {
+      this.setState({
+        access_token: result.access_token,
+      });
+    });
     if (chrome && chrome.tabs) {
       chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
         console.log('tabs:', tabs);
@@ -511,6 +529,32 @@ class PupupPage extends React.Component<PropType, StateType> {
     }
     return html;
   };
+  handleOk = () => {
+    const { access_token } = this.state;
+    this.setState(
+      {
+        isModalOpen: false,
+      },
+      () => {
+        chrome.storage.local.set({ access_token: access_token }, () => {
+          console.log('access_token is set to:', access_token);
+        });
+      }
+    );
+  };
+  handleCancel = () => {
+    this.setState({
+      isModalOpen: false,
+    });
+  };
+  onChangeTextArea = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    console.log(e);
+    const { value } = e.target;
+    console.log(value);
+    this.setState({
+      access_token: value,
+    });
+  };
 
   render() {
     return (
@@ -568,11 +612,24 @@ class PupupPage extends React.Component<PropType, StateType> {
             <Button size="small" type="primary" onClick={this.pushDataEvent}>
               Pull Data
             </Button>
-            <Button size="small" type="primary" onClick={this.pushDownloadEvent}>
-              下载素材
+            <Button size="small" type="primary" onClick={this.pushDownloadCookies}>
+              设置Cookies
             </Button>
           </div>
         </div>
+        <Modal
+          title="设置 Cookies 信息"
+          open={this.state.isModalOpen}
+          onOk={this.handleOk}
+          onCancel={this.handleCancel}
+        >
+          <TextArea
+            autoSize={true}
+            onChange={this.onChangeTextArea}
+            value={this.state.access_token}
+          ></TextArea>
+        </Modal>
+        <Spin spinning={this.state.spinning} fullscreen />
       </>
     );
   }
