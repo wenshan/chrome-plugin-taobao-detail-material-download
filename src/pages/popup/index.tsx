@@ -38,12 +38,15 @@ type StateType = {
   spinning: boolean;
   isModalOpen: boolean;
   access_token: string;
+  fixUrl: string;
 };
 class PupupPage extends React.Component<PropType, StateType> {
   constructor(props: PropType | Readonly<PropType>) {
     super(props);
     this.state = {
-      access_token: '',
+      fixUrl: 'http://127.0.0.1:7001/api/product/createProductPushData',
+      access_token:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhvdV92ZUBob3RtYWlsLmNvbSIsImlhdCI6MTczNjc4MjQwMn0.ABRPoHVk4kYkCJ01ODnjBqQtl1DpBYyvNQr2PXkhxs4',
       isModalOpen: false,
       spinning: false,
       fileNamePath: '',
@@ -259,7 +262,7 @@ class PupupPage extends React.Component<PropType, StateType> {
     });
   };
   pushDataEvent = () => {
-    const { tabsItems, fileNamePath, itemId, onePrice, access_token } = this.state;
+    const { tabsItems, fileNamePath, itemId, onePrice, access_token, fixUrl } = this.state;
     if (access_token && tabsItems && fileNamePath) {
       const postData = {
         access_token,
@@ -271,34 +274,34 @@ class PupupPage extends React.Component<PropType, StateType> {
       };
       console.log('messageData:', postData);
       // const resourceUrl = 'http://127.0.0.1:7001/api/product/createProductPushData';
-      const resourceUrl = 'https://api.limeetpet.com/api/product/createProductPushData';
+      // const resourceUrl = 'https://api.limeetpet.com/api/product/createProductPushData';
       this.setState({
         spinning: true,
       });
       axios
-        .post(resourceUrl, postData, {
+        .post(fixUrl, postData, {
           withCredentials: true,
           timeout: 50000,
         })
         .then((res) => {
           console.log('res:', res);
-          if (res && res.status === 200) {
+          if (res && res.data && res.data.status === 200) {
             this.setState({
               spinning: false,
             });
-            message.success({ content: '发送成功' });
+            message.success({ content: '发送成功', duration: 10 });
           } else {
             this.setState({
               spinning: false,
             });
-            message.error({ content: '数据推送失败' });
+            message.error({ content: res.data.msg, duration: 10 });
           }
         })
         .catch((error) => {
           this.setState({
             spinning: false,
           });
-          message.error({ content: error });
+          message.error({ content: error, duration: 10 });
         });
     } else {
       this.setState({
@@ -314,6 +317,11 @@ class PupupPage extends React.Component<PropType, StateType> {
     chrome.storage.local.get(['access_token'], (result) => {
       this.setState({
         access_token: result.access_token,
+      });
+    });
+    chrome.storage.local.get(['fixUrl'], (result) => {
+      this.setState({
+        fixUrl: result.fixUrl,
       });
     });
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs: any) {
@@ -369,9 +377,9 @@ class PupupPage extends React.Component<PropType, StateType> {
   async componentDidMount() {
     console.log('componentDidMount onload');
     const { tabsItems, activeKey } = this.state;
-    chrome.storage.local.get(['access_token'], (result) => {
+    chrome.storage.local.get(['fixUrl'], (result) => {
       this.setState({
-        access_token: result.access_token,
+        fixUrl: result.fixUrl,
       });
     });
     if (chrome && chrome.tabs) {
@@ -530,7 +538,7 @@ class PupupPage extends React.Component<PropType, StateType> {
     return html;
   };
   handleOk = () => {
-    const { access_token } = this.state;
+    const { access_token, fixUrl } = this.state;
     this.setState(
       {
         isModalOpen: false,
@@ -538,6 +546,10 @@ class PupupPage extends React.Component<PropType, StateType> {
       () => {
         chrome.storage.local.set({ access_token: access_token }, () => {
           console.log('access_token is set to:', access_token);
+        });
+        // fixUrl
+        chrome.storage.local.set({ fixUrl: fixUrl }, () => {
+          console.log('fixUrl is set to:', fixUrl);
         });
       }
     );
@@ -555,7 +567,13 @@ class PupupPage extends React.Component<PropType, StateType> {
       access_token: value,
     });
   };
+  onChangeInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { value } = e.target;
 
+    this.setState({
+      fixUrl: value,
+    });
+  };
   render() {
     return (
       <>
@@ -623,6 +641,7 @@ class PupupPage extends React.Component<PropType, StateType> {
           onOk={this.handleOk}
           onCancel={this.handleCancel}
         >
+          <Input onChange={this.onChangeInput} value={this.state.fixUrl}></Input>
           <TextArea
             autoSize={true}
             onChange={this.onChangeTextArea}
